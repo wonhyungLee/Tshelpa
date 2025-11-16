@@ -1,0 +1,2130 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>🌌 태양계 탐험 – 행성과 궤도</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    /*
+      기본 스타일 설정
+      학생들이 쉽게 사용할 수 있도록 어두운 우주 배경과 밝은 텍스트를 사용한다.
+      레이아웃은 좌측에 컨트롤, 우측에 시각화를 배치한다.
+    */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-main: #020617;
+      --bg-panel: rgba(15, 23, 42, 0.95);
+      --bg-panel-soft: rgba(15, 23, 42, 0.85);
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.3);
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
+      --border-subtle: rgba(148, 163, 184, 0.4);
+      --danger: #fb7185;
+      --success: #4ade80;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: radial-gradient(circle at top, #020617 0, #000000 60%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app {
+      flex: 1;
+      display: flex;
+      gap: 16px;
+      padding: 16px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .left-panel {
+      flex: 0 0 360px;
+      max-width: 380px;
+      background: var(--bg-panel);
+      border-radius: 16px;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+    }
+
+    .right-panel {
+      flex: 1;
+      background: var(--bg-panel-soft);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      overflow: hidden;
+      position: relative;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    h1 span.emoji {
+      font-size: 1.6rem;
+    }
+
+    .subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .tagline {
+      font-size: 0.82rem;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--accent-soft);
+      font-size: 0.75rem;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .badge small {
+      color: var(--text-muted);
+    }
+
+    .controls-card {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border-subtle);
+      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.9));
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .controls-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .control-row {
+      margin-bottom: 8px;
+    }
+
+    .control-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .control-label span.value {
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    select {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      background: rgba(15, 23, 42, 0.8);
+      color: var(--text-main);
+      font-size: 0.85rem;
+    }
+
+    .orbit-mode-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      font-size: 0.8rem;
+    }
+
+    .orbit-mode-btn,
+    .quiz-toggle-btn {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .orbit-mode-btn.active {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .quiz-toggle-btn {
+      background: rgba(56, 189, 248, 0.12);
+      border-color: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .quiz-toggle-btn:hover {
+      background: rgba(56, 189, 248, 0.2);
+    }
+
+    .planet-info-card {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.95);
+      border-left: 3px solid var(--accent);
+      border-top: 1px solid var(--border-subtle);
+      border-right: 1px solid var(--border-subtle);
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 0.8rem;
+    }
+
+    .planet-info-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .planet-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .planet-chip {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .planet-stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 4px 10px;
+      margin-bottom: 6px;
+    }
+
+    .planet-stat-label {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+
+    .planet-stat-value {
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .planet-desc {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .quiz-section {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px dashed rgba(148, 163, 184, 0.6);
+      font-size: 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .quiz-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .quiz-status {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .quiz-content {
+      margin-top: 4px;
+    }
+
+    .quiz-intro {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .quiz-question {
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .quiz-options {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+
+    .quiz-options li {
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 4px 6px;
+    }
+
+    .quiz-options label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .quiz-input {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text-main);
+      font-size: 0.8rem;
+      margin-bottom: 4px;
+    }
+
+    .quiz-controls {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+
+    .quiz-btn {
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.75rem;
+    }
+
+    .quiz-btn.primary {
+      background: rgba(56, 189, 248, 0.2);
+      border-color: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .quiz-btn:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    .quiz-hint {
+      font-size: 0.75rem;
+      color: var(--accent);
+      min-height: 16px;
+    }
+
+    .quiz-feedback {
+      font-size: 0.78rem;
+      margin-top: 2px;
+    }
+
+    .quiz-feedback.correct {
+      color: var(--success);
+    }
+
+    .quiz-feedback.wrong {
+      color: var(--danger);
+    }
+
+    .quiz-rule {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .quiz-result {
+      font-size: 0.82rem;
+      margin-bottom: 2px;
+    }
+
+    .quiz-grade {
+      font-size: 0.8rem;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .primary-btn {
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--accent-soft);
+      background: rgba(56, 189, 248, 0.25);
+      color: var(--accent);
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .canvas-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 4px;
+    }
+
+    .canvas-header h2 {
+      font-size: 1rem;
+    }
+
+    .canvas-note {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .canvas-container {
+      flex: 1;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      background: radial-gradient(circle at 20% 0, #020617 0, #000 45%, #020617 100%);
+      overflow: hidden;
+      position: relative;
+      margin-top: 6px;
+    }
+
+    #solarCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .canvas-tip {
+      position: absolute;
+      bottom: 8px;
+      right: 10px;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      background: rgba(15, 23, 42, 0.7);
+      padding: 4px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      backdrop-filter: blur(4px);
+    }
+
+    #planetPopup {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.75);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    #planetPopup.visible {
+      display: flex;
+    }
+
+    .popup-card {
+      width: min(340px, 90vw);
+      background: rgba(15, 23, 42, 0.98);
+      border-radius: 16px;
+      padding: 14px 16px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8);
+      font-size: 0.8rem;
+    }
+
+    .popup-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .popup-title {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .popup-close {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .popup-body {
+      margin-top: 4px;
+    }
+
+    .popup-body p {
+      margin-bottom: 4px;
+    }
+
+    .popup-scale-note {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .popup-img-wrap {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      background: rgba(2, 6, 23, 0.6);
+      overflow: hidden;
+      margin-bottom: 6px;
+      display: block;
+    }
+    .popup-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .footer {
+      border-top: 1px solid rgba(31, 41, 55, 0.9);
+      background: rgba(15, 23, 42, 0.98);
+      padding: 8px 16px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .footer small {
+      display: block;
+    }
+
+    .footer strong {
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    @media (max-width: 900px) {
+      .app {
+        flex-direction: column;
+      }
+
+      .left-panel {
+        flex: 0 0 auto;
+        max-width: 100%;
+        order: 1;
+      }
+
+      .right-panel {
+        order: 0;
+        min-height: 340px;
+      }
+
+      .canvas-container {
+        min-height: 260px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .quiz-controls {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .footer-inner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- 왼쪽 패널: 컨트롤 및 정보 -->
+    <aside class="left-panel">
+      <header>
+        <!-- 교과서 배지 -->
+        <div class="badge">
+          <span>중학 과학1(임성숙) · 7-1 &lt;태양계의 구성원&gt;</span>
+          <small>228~233쪽</small>
+        </div>
+        <h1>
+          <span class="emoji">🌌</span>
+          <span>태양계 탐험 – 행성과 궤도</span>
+        </h1>
+        <p class="subtitle">
+          8행성의 상대적 거리·공전 주기·공전 방향을 3D 시각화와 퀴즈로 익혀요.
+        </p>
+        <p class="tagline">
+          시간 배율·궤도 모드·퀴즈를 조작하며 나만의 태양계 수업 콘텐츠를 만들어 보세요.
+        </p>
+      </header>
+
+      <!-- 조작 패널 -->
+      <section class="controls-card" aria-label="조작 패널">
+        <div class="controls-title">조작 패널</div>
+
+        <!-- 시뮬레이션 제어 -->
+        <div class="control-row" aria-label="시뮬레이션 제어">
+          <div class="orbit-mode-group">
+            <button type="button" id="playPauseBtn" class="orbit-mode-btn" aria-pressed="true">⏸️ 일시정지</button>
+            <button type="button" id="resetViewBtn" class="orbit-mode-btn">🔄 보기 초기화</button>
+            <button type="button" id="screenshotBtn" class="orbit-mode-btn">📷 스크린샷</button>
+          </div>
+        </div>
+
+        <!-- 시간 배율 슬라이더 -->
+        <div class="control-row">
+          <div class="control-label">
+            <span>시간 배율</span>
+            <span class="value" id="timeScaleLabel">x100</span>
+          </div>
+          <input
+            type="range"
+            id="timeScale"
+            min="1"
+            max="1000"
+            value="100"
+          />
+        </div>
+
+        <!-- 행성 선택 드롭다운 -->
+        <div class="control-row">
+          <div class="control-label">
+            <span>행성 선택</span>
+            <span class="value">클릭하거나 목록에서 선택</span>
+          </div>
+          <select id="planetSelect">
+            <option value="0">수성 (Mercury)</option>
+            <option value="1">금성 (Venus)</option>
+            <option value="2" selected>지구 (Earth)</option>
+            <option value="3">화성 (Mars)</option>
+            <option value="4">목성 (Jupiter)</option>
+            <option value="5">토성 (Saturn)</option>
+            <option value="6">천왕성 (Uranus)</option>
+            <option value="7">해왕성 (Neptune)</option>
+          </select>
+        </div>
+
+        <!-- 궤도 보기 모드 -->
+        <div class="control-row">
+          <div class="control-label">
+            <span>궤도 보기 모드</span>
+          </div>
+          <div class="orbit-mode-group">
+            <button
+              type="button"
+              class="orbit-mode-btn active"
+              data-mode="2d"
+            >
+              2D 평면
+            </button>
+            <button
+              type="button"
+              class="orbit-mode-btn"
+              data-mode="3d"
+            >
+              3D 궤도 느낌
+            </button>
+            <button
+              type="button"
+              class="orbit-mode-btn"
+              data-mode="constellation"
+            >
+              지구에서 본 행성
+            </button>
+          </div>
+        </div>
+
+        <!-- 보기 옵션 -->
+        <div class="control-row" aria-label="보기 옵션">
+          <div class="control-label">
+            <span>보기 옵션</span>
+          </div>
+          <div class="orbit-mode-group">
+            <button type="button" id="toggleOrbitsBtn" class="orbit-mode-btn active" aria-pressed="true">궤도 표시</button>
+            <button type="button" id="toggleLabelsBtn" class="orbit-mode-btn" aria-pressed="false">행성 이름</button>
+          </div>
+        </div>
+
+        <!-- 별자리 보기 옵션 -->
+        <div class="control-row" aria-label="별자리 보기 옵션">
+          <div class="control-label">
+            <span>별자리 보기(지구 시점)</span>
+            <span class="value">천동설·지동설 비교</span>
+          </div>
+          <div class="orbit-mode-group">
+            <button type="button" id="toggleSkyCenterBtn" class="orbit-mode-btn active" aria-pressed="true">지구중심</button>
+            <button type="button" id="toggleSkyTrailsBtn" class="orbit-mode-btn active" aria-pressed="true">궤적 표시</button>
+            <button type="button" id="toggleRetrogradeBtn" class="orbit-mode-btn active" aria-pressed="true">역행 강조</button>
+          </div>
+        </div>
+
+        <!-- 퀴즈 모드 버튼 -->
+        <div class="control-row">
+          <button
+            type="button"
+            class="quiz-toggle-btn"
+            id="quizToggleBtn"
+          >
+            🧠 퀴즈 모드 시작
+          </button>
+        </div>
+      </section>
+
+      <!-- 행성 정보 카드 -->
+      <section class="planet-info-card" aria-live="polite">
+        <div class="planet-info-header">
+          <div class="planet-name" id="planetName">
+            지구 (Earth)
+          </div>
+          <div class="planet-chip">행성 정보</div>
+        </div>
+        <div class="planet-stats">
+          <div>
+            <div class="planet-stat-label">반지름</div>
+            <div class="planet-stat-value" id="planetRadius">
+              6,371 km
+            </div>
+          </div>
+          <div>
+            <div class="planet-stat-label">공전 주기</div>
+            <div class="planet-stat-value" id="planetOrbit">
+              365일
+            </div>
+          </div>
+          <div>
+            <div class="planet-stat-label">자전 주기</div>
+            <div class="planet-stat-value" id="planetRotation">
+              24시간
+            </div>
+          </div>
+          <div>
+            <div class="planet-stat-label">표면 온도</div>
+            <div class="planet-stat-value" id="planetTemp">
+              ~15℃ (평균)
+            </div>
+          </div>
+        </div>
+        <p class="planet-desc" id="planetDesc">
+          물과 대기가 존재하며, 우리가 살고 있는 행성입니다. 생명체가 발견된 유일한 행성입니다.
+        </p>
+      </section>
+
+      <!-- 퀴즈 영역 -->
+      <section class="quiz-section" aria-label="태양계 퀴즈">
+        <div class="quiz-header-row">
+          <div class="controls-title">태양계 탐험 퀴즈</div>
+          <div class="quiz-status" id="quizStatus">
+            점수: 0점 | 문제 0 / 0
+          </div>
+        </div>
+        <div class="quiz-content" id="quizContent">
+          <p class="quiz-intro">
+            왼쪽 위의 <strong>🧠 퀴즈 모드 시작</strong> 버튼을 눌러
+            행성 정보에 관한 객관식·주관식 문제를 풀어 보세요.
+          </p>
+        </div>
+        <div class="quiz-controls" id="quizControls" style="display: none;">
+          <button
+            type="button"
+            class="quiz-btn"
+            id="hintBtn"
+          >
+            💡 힌트 보기 (-1점)
+          </button>
+          <button
+            type="button"
+            class="quiz-btn primary"
+            id="submitAnswerBtn"
+          >
+            ✅ 정답 제출
+          </button>
+          <button
+            type="button"
+            class="quiz-btn"
+            id="nextQuestionBtn"
+            disabled
+          >
+            다음 문제
+          </button>
+        </div>
+        <p class="quiz-rule">
+          점수 규칙: <strong>정답 +2점</strong>, <strong>오답 0점</strong>,
+          <strong>힌트 사용 -1점</strong> (최소 0점).
+        </p>
+      </section>
+    </aside>
+
+    <!-- 오른쪽 패널: 3D 시뮬레이션 -->
+    <main class="right-panel" aria-label="태양계 시각화">
+      <div class="canvas-header">
+        <h2>태양계 3D/2D 모델</h2>
+        <p class="canvas-note">
+          * 적용된 천체 규모는 실제와 다를 수 있습니다.
+        </p>
+      </div>
+      <div class="canvas-container">
+        <canvas id="solarCanvas" aria-label="태양계 시뮬레이션"></canvas>
+        <div class="canvas-tip">
+          드래그: 회전/이동 · 휠: 확대/축소 · 행성 클릭: 확대 및 정보 보기
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 행성 설명 팝업 -->
+  <div id="planetPopup" role="dialog" aria-modal="true">
+    <div class="popup-card">
+      <div class="popup-header">
+        <div class="popup-title" id="popupPlanetName">행성 정보</div>
+        <button
+          type="button"
+          class="popup-close"
+          id="popupClose"
+          aria-label="닫기"
+        >
+          ✕
+        </button>
+      </div>
+      <div class="popup-body">
+        <div class="popup-img-wrap">
+          <img id="popupPlanetImg" src="" alt="행성 이미지" />
+        </div>
+        <p id="popupPlanetText">
+          행성을 클릭하면 이곳에 간단한 설명이 나타납니다.
+        </p>
+        <p class="popup-scale-note">
+          ※ 시각화를 위해 <strong>거리·크기·속도는 실제 비율과 다를 수 있습니다.</strong>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div>
+        <small>
+          교과서 정보: <strong>중학 과학1(임성숙) 7-1 &lt;태양계의 구성원&gt; 228~233쪽</strong>
+        </small>
+        <small>제작/문의: <strong>dldnjsrk@gmail.com</strong></small>
+      </div>
+      <div>
+        <small>
+          이 페이지는 수업용 예시이며, 저작권은 각 교과서 및 자료의 원저작자에게 있습니다.
+        </small>
+        <small>
+          이 웹페이지는 <strong>학생의 이름이나 개인정보를 수집·저장하지 않습니다.</strong>
+        </small>
+      </div>
+    </div>
+  </footer>
+
+  <!-- 자바스크립트: 시뮬레이션 및 퀴즈 기능 구현 -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const canvas = document.getElementById("solarCanvas");
+      const ctx = canvas.getContext("2d");
+
+      const timeSlider = document.getElementById("timeScale");
+      const timeLabel = document.getElementById("timeScaleLabel");
+      const planetSelect = document.getElementById("planetSelect");
+      const orbitButtons = document.querySelectorAll(".orbit-mode-btn[data-mode]");
+      const quizToggleBtn = document.getElementById("quizToggleBtn");
+      const playPauseBtn = document.getElementById("playPauseBtn");
+      const resetViewBtn = document.getElementById("resetViewBtn");
+      const screenshotBtn = document.getElementById("screenshotBtn");
+      const toggleOrbitsBtn = document.getElementById("toggleOrbitsBtn");
+      const toggleLabelsBtn = document.getElementById("toggleLabelsBtn");
+      const toggleSkyCenterBtn = document.getElementById("toggleSkyCenterBtn");
+      const toggleSkyTrailsBtn = document.getElementById("toggleSkyTrailsBtn");
+      const toggleRetrogradeBtn = document.getElementById("toggleRetrogradeBtn");
+
+      const planetNameElem = document.getElementById("planetName");
+      const planetRadiusElem = document.getElementById("planetRadius");
+      const planetOrbitElem = document.getElementById("planetOrbit");
+      const planetRotationElem = document.getElementById("planetRotation");
+      const planetTempElem = document.getElementById("planetTemp");
+      const planetDescElem = document.getElementById("planetDesc");
+
+      const popup = document.getElementById("planetPopup");
+      const popupPlanetName = document.getElementById("popupPlanetName");
+      const popupPlanetText = document.getElementById("popupPlanetText");
+      const popupPlanetImg = document.getElementById("popupPlanetImg");
+      const popupClose = document.getElementById("popupClose");
+
+      // Footer에 NASA 출처 크레딧 동적 추가
+      try {
+        const firstCol = document.querySelector('.footer-inner > div:first-child');
+        if (firstCol && !document.getElementById('nasaCredit')) {
+          const credit = document.createElement('small');
+          credit.id = 'nasaCredit';
+          credit.innerHTML = '이미지·기초 정보 출처: <strong><a href="https://science.nasa.gov/solar-system/planets/" target="_blank" rel="noopener">NASA Science — Planets</a></strong>';
+          firstCol.appendChild(credit);
+        }
+      } catch (e) { /* ignore */ }
+
+      // Placeholder 생성기: 행성별 간단 텍스처가 포함된 원형 이미지를 생성
+      function generatePlanetPlaceholder(planet, size = 256) {
+        const c = document.createElement("canvas");
+        c.width = c.height = size;
+        const g = c.getContext("2d");
+        const cx = size / 2;
+        const cy = size / 2;
+        const r = size * 0.38;
+
+        // Saturn 고리(배경, 얇게)
+        if (planet.name === "Saturn") {
+          g.save();
+          g.translate(cx, cy);
+          g.scale(1, 0.6);
+          g.beginPath();
+          g.ellipse(0, 0, r * 1.55, r * 0.68, 0, 0, Math.PI * 2);
+          g.strokeStyle = "rgba(229, 231, 235, 0.6)";
+          g.lineWidth = Math.max(1, size * 0.015);
+          g.stroke();
+          g.restore();
+        }
+
+        // 본체 그라디언트
+        const baseColor = planet.color || "#9ca3af";
+        const grad = g.createRadialGradient(cx - r * 0.4, cy - r * 0.4, r * 0.2, cx, cy, r);
+        grad.addColorStop(0, "rgba(255,255,255,0.9)");
+        grad.addColorStop(0.45, baseColor);
+        grad.addColorStop(1, "rgba(0,0,0,0.85)");
+        g.fillStyle = grad;
+        g.beginPath();
+        g.arc(cx, cy, r, 0, Math.PI * 2);
+        g.fill();
+
+        // 간단 텍스처
+        if (planet.name === "Jupiter" || planet.name === "Saturn") {
+          for (let i = -3; i <= 3; i++) {
+            g.globalAlpha = 0.12 + (i % 2 ? 0.06 : 0);
+            g.fillStyle = "#ffffff";
+            g.beginPath();
+            g.ellipse(cx, cy + i * r * 0.2, r * 0.92, r * 0.34, 0, 0, Math.PI * 2);
+            g.fill();
+          }
+          g.globalAlpha = 1;
+          if (planet.name === "Jupiter") {
+            g.beginPath();
+            g.ellipse(cx + r * 0.32, cy + r * 0.08, r * 0.22, r * 0.12, 0, 0, Math.PI * 2);
+            g.fillStyle = "rgba(239, 68, 68, 0.55)";
+            g.fill();
+          }
+        } else if (planet.name === "Earth") {
+          g.fillStyle = "rgba(34,197,94,0.7)";
+          g.beginPath();
+          g.ellipse(cx - r * 0.2, cy + r * 0.05, r * 0.42, r * 0.26, 0.25, 0, Math.PI * 2);
+          g.fill();
+          g.beginPath();
+          g.ellipse(cx + r * 0.1, cy - r * 0.2, r * 0.28, r * 0.18, -0.2, 0, Math.PI * 2);
+          g.fill();
+          g.fillStyle = "rgba(234, 179, 8, 0.55)";
+          g.beginPath();
+          g.ellipse(cx + r * 0.05, cy + r * 0.22, r * 0.18, r * 0.12, 0, 0, Math.PI * 2);
+          g.fill();
+        } else if (planet.name === "Mars") {
+          g.fillStyle = "rgba(180,83,9,0.35)";
+          g.beginPath();
+          g.ellipse(cx + r * 0.1, cy + r * 0.02, r * 0.5, r * 0.28, 0.4, 0, Math.PI * 2);
+          g.fill();
+        } else if (planet.name === "Mercury") {
+          g.fillStyle = "rgba(0,0,0,0.25)";
+          for (let i = 0; i < 6; i++) {
+            const a = Math.random() * Math.PI * 2;
+            const rr = r * 0.55 * Math.random();
+            const rx = cx + Math.cos(a) * rr * 0.75;
+            const ry = cy + Math.sin(a) * rr * 0.75;
+            const cr = r * 0.07 * (0.5 + Math.random());
+            g.beginPath();
+            g.arc(rx, ry, cr, 0, Math.PI * 2);
+            g.fill();
+          }
+        } else if (planet.name === "Neptune" || planet.name === "Uranus" || planet.name === "Venus") {
+          g.globalAlpha = 0.15;
+          g.fillStyle = "#ffffff";
+          g.beginPath();
+          g.ellipse(cx, cy, r * 0.88, r * 0.5, 0, 0, Math.PI * 2);
+          g.fill();
+          g.globalAlpha = 1;
+        }
+
+        return c.toDataURL("image/png");
+      }
+
+      const quizContent = document.getElementById("quizContent");
+      const quizStatus = document.getElementById("quizStatus");
+      const quizControls = document.getElementById("quizControls");
+      const hintBtn = document.getElementById("hintBtn");
+      const submitAnswerBtn = document.getElementById("submitAnswerBtn");
+      const nextQuestionBtn = document.getElementById("nextQuestionBtn");
+
+      // 초기 설정값
+      let timeScale = parseInt(timeSlider.value, 10) || 100;
+      let orbitMode = "2d";
+      let selectedPlanetIndex = 2; // 기본: Earth
+      let globalRotation = 0;
+      let zoom = 1;
+      let isDragging = false;
+      let lastMouseX = 0;
+      let lastMouseY = 0;
+      let panX = 0;
+      let panY = 0;
+      let showOrbits = true;
+      let showLabels = false;
+      let paused = false;
+      // 별자리(하늘) 모드 상태
+      let skyUseGeocentric = true; // true: 지구중심(천동설적 시각화), false: 태양중심(지동설적 비교)
+      let skyShowTrails = true;
+      let skyHighlightRetrograde = true;
+      let skyTrailTimer = 0;
+      const SKY_TRAIL_SAMPLE_SEC = 0.08;
+      const SKY_TRAIL_MAX = 220;
+
+      // 사용자가 행성을 확대할 때 이전 상태 저장용 변수
+      let savedState = null;
+
+      timeLabel.textContent = `x${timeScale}`;
+
+      timeSlider.addEventListener("input", () => {
+        timeScale = parseInt(timeSlider.value, 10);
+        timeLabel.textContent = `x${timeScale}`;
+        saveSettings();
+      });
+
+      // 행성 데이터 정의
+      const planets = [
+        {
+          name: "Mercury",
+          displayName: "수성",
+          color: "#c2b280",
+          orbitScale: 0.6,
+          size: 4,
+          orbitalPeriodDays: 88,
+          radiusKm: "2,440 km",
+          rotationHours: "1,408시간",
+          temp: "~167℃",
+          description:
+            "태양에 가장 가까운 행성으로, 대기가 거의 없어 낮과 밤의 온도 차가 매우 큽니다.",
+          angle: Math.random() * Math.PI * 2,
+          screenX: 0,
+          screenY: 0,
+          imgSrc: "./planets/mercury.jpg",
+          nasaUrl: "https://science.nasa.gov/mercury/",
+          image: null,
+        },
+        {
+          name: "Venus",
+          displayName: "금성",
+          color: "#facc15",
+          orbitScale: 0.9,
+          size: 6,
+          orbitalPeriodDays: 225,
+          radiusKm: "6,052 km",
+          rotationHours: "−5,832시간",
+          temp: "~464℃",
+          description:
+            "두꺼운 이산화탄소 대기와 강한 온실 효과로 태양계에서 가장 뜨거운 행성입니다.",
+          angle: Math.random() * Math.PI * 2,
+          screenX: 0,
+          screenY: 0,
+          imgSrc: "./planets/venus.jpg",
+          nasaUrl: "https://science.nasa.gov/venus/",
+          image: null,
+        },
+        {
+          name: "Earth",
+          displayName: "지구",
+          color: "#22c55e",
+          orbitScale: 1.2,
+          size: 6.5,
+          orbitalPeriodDays: 365,
+          radiusKm: "6,371 km",
+          rotationHours: "24시간",
+          temp: "~15℃ (평균)",
+          description:
+            "물과 대기가 존재하며, 생명체가 발견된 유일한 행성입니다.",
+          angle: Math.random() * Math.PI * 2,
+          screenX: 0,
+          screenY: 0,
+          imgSrc: "./planets/earth.jpg",
+          nasaUrl: "https://science.nasa.gov/earth/",
+          image: null,
+        },
+        {
+          name: "Mars",
+          displayName: "화성",
+          color: "#f97316",
+          orbitScale: 1.6,
+          size: 5,
+          orbitalPeriodDays: 687,
+          radiusKm: "3,390 km",
+          rotationHours: "24.6시간",
+          temp: "~−63℃",
+          description:
+            "붉은색을 띠는 암석 행성으로, 과거에 물이 흘렀던 흔적이 발견되었습니다.",
+          angle: Math.random() * Math.PI * 2,
+          screenX: 0,
+          screenY: 0,
+          imgSrc: "./planets/mars_new.png",
+          nasaUrl: "https://science.nasa.gov/mars/",
+          image: null,
+        },
+        {
+          name: "Jupiter",
+          displayName: "목성",
+          color: "#facc6b",
+          orbitScale: 2.3,
+          size: 10,
+          orbitalPeriodDays: 4333,
+          radiusKm: "69,911 km",
+          rotationHours: "9.9시간",
+          temp: "~−108℃",
+          description:
+            "태양계에서 가장 큰 가스형 행성으로, 커다란 붉은 반점(대적반)이 유명합니다.",
+          angle: Math.random() * Math.PI * 2,
+          screenX: 0,
+          screenY: 0,
+          imgSrc: "./planets/jupiter.jpg",
+          nasaUrl: "https://science.nasa.gov/jupiter/",
+          image: null,
+        },
+        {
+          name: "Saturn",
+          displayName: "토성",
+          color: "#e5e7eb",
+          orbitScale: 2.8,
+          size: 9,
+          orbitalPeriodDays: 10759,
+          radiusKm: "58,232 km",
+          rotationHours: "10.7시간",
+          temp: "~−139℃",
+          description:
+            "아름다운 고리로 유명한 가스형 행성으로, 얼음과 먼지로 이루어진 고리를 갖고 있습니다.",
+          angle: Math.random() * Math.PI * 2,
+          screenX: 0,
+          screenY: 0,
+          imgSrc: "./planets/saturn.jpg",
+          nasaUrl: "https://science.nasa.gov/saturn/",
+          image: null,
+        },
+        {
+          name: "Uranus",
+          displayName: "천왕성",
+          color: "#38bdf8",
+          orbitScale: 3.3,
+          size: 8,
+          orbitalPeriodDays: 30687,
+          radiusKm: "25,362 km",
+          rotationHours: "−17.2시간",
+          temp: "~−197℃",
+          description:
+            "자전축이 옆으로 누운 독특한 행성으로, 옆으로 구르듯이 공전합니다.",
+          angle: Math.random() * Math.PI * 2,
+          screenX: 0,
+          screenY: 0,
+          imgSrc: "./planets/uranus.jpg",
+          nasaUrl: "https://science.nasa.gov/uranus/",
+          image: null,
+        },
+        {
+          name: "Neptune",
+          displayName: "해왕성",
+          color: "#1d4ed8",
+          orbitScale: 3.8,
+          size: 8,
+          orbitalPeriodDays: 60190,
+          radiusKm: "24,622 km",
+          rotationHours: "16시간",
+          temp: "~−201℃",
+          description:
+            "강한 바람과 폭풍이 부는 푸른 색의 가스 행성으로, 태양계에서 가장 바깥쪽에 있습니다.",
+          angle: Math.random() * Math.PI * 2,
+          screenX: 0,
+          screenY: 0,
+          imgSrc: "./planets/neptune.jpg",
+          nasaUrl: "https://science.nasa.gov/neptune/",
+          image: null,
+        },
+      ];
+
+      // 이미지 로드 + 자동 오프셋 추정(디스크 중심 근사)
+      function computeImageAutoOffset(img) {
+        try {
+          const S = 128;
+          const c = document.createElement('canvas');
+          c.width = c.height = S;
+          const g = c.getContext('2d');
+          // contain으로 축소해 중앙 배치한 뒤 중심 질량 추정
+          const sw = img.naturalWidth || img.width;
+          const sh = img.naturalHeight || img.height;
+          const scale = Math.min(S / sw, S / sh);
+          const dw = sw * scale;
+          const dh = sh * scale;
+          const dx = (S - dw) / 2;
+          const dy = (S - dh) / 2;
+          g.drawImage(img, 0, 0, sw, sh, dx, dy, dw, dh);
+          const { data } = g.getImageData(0, 0, S, S);
+          let sum = 0, cx = 0, cy = 0;
+          for (let y = 0; y < S; y++) {
+            for (let x = 0; x < S; x++) {
+              const i = (y * S + x) * 4;
+              const r = data[i], gg = data[i+1], b = data[i+2];
+              const lum = 0.2126*r + 0.7152*gg + 0.0722*b;
+              if (lum > 20) { // 어두운 배경 무시
+                sum += lum;
+                cx += x * lum;
+                cy += y * lum;
+              }
+            }
+          }
+          if (sum <= 0) return {x:0,y:0};
+          cx /= sum; cy /= sum;
+          // -0.5~0.5 근처 값으로 정규화
+          return { x:(cx - S/2)/S, y:(cy - S/2)/S };
+        } catch (_) {
+          return {x:0,y:0};
+        }
+      }
+
+      planets.forEach((p) => {
+        const img = new Image();
+        img.onload = () => {
+          const off = computeImageAutoOffset(img);
+          p.autoOffsetX = off.x || 0;
+          p.autoOffsetY = off.y || 0;
+        };
+        img.src = p.imgSrc;
+        p.image = img;
+      });
+
+      // 행성 정보 업데이트
+      function updatePlanetInfo() {
+        const p = planets[selectedPlanetIndex];
+        planetNameElem.textContent = `${p.displayName} (${p.name})`;
+        planetRadiusElem.textContent = p.radiusKm;
+        planetOrbitElem.textContent = `${p.orbitalPeriodDays.toLocaleString(
+          "ko-KR"
+        )}일`;
+        planetRotationElem.textContent = p.rotationHours;
+        planetTempElem.textContent = p.temp;
+        planetDescElem.textContent = p.description;
+      }
+
+      planetSelect.addEventListener("change", (e) => {
+        const idx = parseInt(e.target.value, 10);
+        if (!isNaN(idx)) {
+          selectedPlanetIndex = idx;
+          updatePlanetInfo();
+          // 선택된 행성으로 확대하고 팝업 표시
+          const p = planets[idx];
+          focusOnPlanet(p);
+          showPlanetPopup(p);
+        }
+      });
+
+      // 궤도 모드 버튼 이벤트
+      orbitButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          orbitButtons.forEach((b) => {
+            b.classList.remove("active");
+            b.setAttribute("aria-pressed", "false");
+          });
+          btn.classList.add("active");
+          btn.setAttribute("aria-pressed", "true");
+          orbitMode = btn.dataset.mode || "2d";
+          saveSettings();
+        });
+      });
+
+      // 보기 옵션 토글
+      toggleOrbitsBtn.addEventListener("click", () => {
+        showOrbits = !showOrbits;
+        toggleOrbitsBtn.classList.toggle("active", showOrbits);
+        toggleOrbitsBtn.setAttribute("aria-pressed", showOrbits ? "true" : "false");
+        saveSettings();
+      });
+      toggleLabelsBtn.addEventListener("click", () => {
+        showLabels = !showLabels;
+        toggleLabelsBtn.classList.toggle("active", showLabels);
+        toggleLabelsBtn.setAttribute("aria-pressed", showLabels ? "true" : "false");
+        saveSettings();
+      });
+
+      // 별자리 보기 옵션
+      toggleSkyCenterBtn.addEventListener("click", () => {
+        skyUseGeocentric = !skyUseGeocentric;
+        toggleSkyCenterBtn.classList.toggle("active", skyUseGeocentric);
+        toggleSkyCenterBtn.textContent = skyUseGeocentric ? '지구중심' : '태양중심';
+        toggleSkyCenterBtn.setAttribute("aria-pressed", skyUseGeocentric ? "true" : "false");
+        saveSettings();
+      });
+      toggleSkyTrailsBtn.addEventListener("click", () => {
+        skyShowTrails = !skyShowTrails;
+        toggleSkyTrailsBtn.classList.toggle("active", skyShowTrails);
+        toggleSkyTrailsBtn.setAttribute("aria-pressed", skyShowTrails ? "true" : "false");
+        saveSettings();
+      });
+      toggleRetrogradeBtn.addEventListener("click", () => {
+        skyHighlightRetrograde = !skyHighlightRetrograde;
+        toggleRetrogradeBtn.classList.toggle("active", skyHighlightRetrograde);
+        toggleRetrogradeBtn.setAttribute("aria-pressed", skyHighlightRetrograde ? "true" : "false");
+        saveSettings();
+      });
+
+      // 재생/일시정지, 보기 초기화, 스크린샷 저장
+      playPauseBtn.addEventListener("click", () => {
+        paused = !paused;
+        playPauseBtn.textContent = paused ? "▶️ 재생" : "⏸️ 일시정지";
+        playPauseBtn.setAttribute("aria-pressed", paused ? "false" : "true");
+      });
+      function resetView() {
+        zoom = 1;
+        panX = 0;
+        panY = 0;
+        globalRotation = 0;
+        savedState = null;
+      }
+      resetViewBtn.addEventListener("click", () => {
+        resetView();
+      });
+      screenshotBtn.addEventListener("click", () => {
+        try {
+          const data = canvas.toDataURL("image/png");
+          const a = document.createElement("a");
+          const ts = new Date().toISOString().replace(/[:.]/g, "-");
+          a.href = data;
+          a.download = `solar-snapshot-${ts}.png`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        } catch (e) {
+          alert("스크린샷 저장에 실패했습니다. 브라우저 설정을 확인해주세요.");
+        }
+      });
+
+      // 팝업 닫기 기능
+      popupClose.addEventListener("click", () => {
+        popup.classList.remove("visible");
+        if (savedState) {
+          // 이전 상태 복원
+          ({ zoom, panX, panY } = savedState);
+          savedState = null;
+        }
+      });
+      popup.addEventListener("click", (e) => {
+        if (e.target === popup) {
+          popup.classList.remove("visible");
+          if (savedState) {
+            ({ zoom, panX, panY } = savedState);
+            savedState = null;
+          }
+        }
+      });
+
+      // 별 배경 생성
+      const stars = [];
+      for (let i = 0; i < 80; i++) {
+        stars.push({
+          x: Math.random(),
+          y: Math.random(),
+          size: Math.random() * 1.4 + 0.6,
+          alpha: Math.random() * 0.5 + 0.2,
+        });
+      }
+
+      function resizeCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        const ratio = window.devicePixelRatio || 1;
+        canvas.width = rect.width * ratio;
+        canvas.height = rect.height * ratio;
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      }
+      window.addEventListener("resize", resizeCanvas);
+      resizeCanvas();
+      loadSettings();
+      updatePlanetInfo();
+
+      let lastTimestamp = 0;
+
+      function update(dt) {
+        const baseFactor = timeScale / 100;
+        planets.forEach((p) => {
+          const angularSpeed = (2 * Math.PI) / p.orbitalPeriodDays;
+          p.angle += angularSpeed * dt * baseFactor;
+        });
+
+        // 별자리(지구 시점) 각도/역행 계산 및 궤적 누적
+        const earth = planets[2];
+        const ex = earth.orbitScale * Math.cos(earth.angle);
+        const ey = earth.orbitScale * Math.sin(earth.angle);
+        planets.forEach((p, idx) => {
+          const px = p.orbitScale * Math.cos(p.angle);
+          const py = p.orbitScale * Math.sin(p.angle);
+          let rx, ry;
+          if (skyUseGeocentric) {
+            // 지구 기준 벡터
+            rx = px - ex;
+            ry = py - ey;
+          } else {
+            // 태양 기준(비교용)
+            rx = px;
+            ry = py;
+          }
+          const prev = p.skyAngle ?? Math.atan2(ry, rx);
+          const now = Math.atan2(ry, rx);
+          p.prevSkyAngle = prev;
+          p.skyAngle = now;
+          // 역행 판정: 각속도 부호(지구중심일 때만 의미)
+          const d = Math.atan2(Math.sin(now - prev), Math.cos(now - prev));
+          p.isRetrograde = skyUseGeocentric ? d < 0 : false;
+          // 궤적 기록(지구 제외)
+          if (idx !== 2) {
+            if (skyTrailTimer > SKY_TRAIL_SAMPLE_SEC) {
+              p.skyTrail = p.skyTrail || [];
+              p.skyTrail.push({ a: now, r: p.isRetrograde });
+              if (p.skyTrail.length > SKY_TRAIL_MAX) p.skyTrail.shift();
+            }
+          }
+        });
+        skyTrailTimer += dt;
+        if (skyTrailTimer > SKY_TRAIL_SAMPLE_SEC) skyTrailTimer = 0;
+      }
+
+      function draw() {
+        const ratio = window.devicePixelRatio || 1;
+        const w = canvas.width / ratio;
+        const h = canvas.height / ratio;
+
+        ctx.clearRect(0, 0, w, h);
+        // 배경 그라데이션
+        const gradient = ctx.createRadialGradient(
+          w / 2,
+          h / 2,
+          0,
+          w / 2,
+          h / 2,
+          Math.max(w, h) * 0.7
+        );
+        gradient.addColorStop(0, "#020617");
+        gradient.addColorStop(1, "#000000");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, w, h);
+
+        // 별 그리기
+        ctx.save();
+        ctx.globalAlpha = 0.9;
+        stars.forEach((s) => {
+          ctx.beginPath();
+          ctx.arc(w * s.x, h * s.y, s.size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(148, 163, 184, ${s.alpha})`;
+          ctx.fill();
+        });
+        ctx.restore();
+
+        const cx = w / 2 + panX;
+        const cy = h / 2 + panY;
+        const baseScale = Math.min(w, h) / 4.2;
+        const tilt = orbitMode === "3d" ? 0.55 : 1;
+
+        const cosR = Math.cos(globalRotation);
+        const sinR = Math.sin(globalRotation);
+
+        // 궤도 렌더링 (2D/3D 모드에서만)
+        if (showOrbits && (orbitMode === "2d" || orbitMode === "3d")) {
+          ctx.save();
+          ctx.translate(cx, cy);
+          ctx.rotate(globalRotation);
+          planets.forEach((p) => {
+            const orbitRadius = p.orbitScale * baseScale * zoom;
+            ctx.beginPath();
+            ctx.ellipse(
+              0,
+              0,
+              orbitRadius,
+              orbitRadius * tilt,
+              0,
+              0,
+              Math.PI * 2
+            );
+            ctx.strokeStyle = "rgba(148, 163, 184, 0.35)";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          });
+          ctx.restore();
+        }
+
+        // 태양 그리기
+        const sunRadius = 10 * zoom;
+        ctx.beginPath();
+        ctx.arc(cx, cy, sunRadius, 0, Math.PI * 2);
+        const sunGrad = ctx.createRadialGradient(
+          cx,
+          cy,
+          0,
+          cx,
+          cy,
+          sunRadius * 3
+        );
+        sunGrad.addColorStop(0, "#facc15");
+        sunGrad.addColorStop(0.5, "#f97316");
+        sunGrad.addColorStop(1, "rgba(248, 250, 252, 0)");
+        ctx.fillStyle = sunGrad;
+        ctx.fill();
+
+        // 각 행성 그리기
+        planets.forEach((p, index) => {
+          let xLocal = p.orbitScale * baseScale * Math.cos(p.angle);
+          let yLocal = p.orbitScale * baseScale * Math.sin(p.angle);
+
+          let xr = xLocal * cosR - yLocal * sinR;
+          let yr = (xLocal * sinR + yLocal * cosR) * (orbitMode === "3d" ? tilt : 1);
+
+          let sx, sy;
+          if (orbitMode === "constellation") {
+            // 별자리 모드: 하늘의 원(천구) 위 투영
+            const radius = baseScale * 1.2 * zoom;
+            if (p.name === "Earth") {
+              // 지구는 중심
+              sx = cx;
+              sy = cy;
+            } else {
+              const ang = (p.skyAngle ?? Math.atan2(yLocal, xLocal)) + globalRotation;
+              sx = cx + Math.cos(ang) * radius;
+              sy = cy + Math.sin(ang) * radius;
+            }
+          } else {
+            sx = cx + xr * zoom;
+            sy = cy + yr * zoom;
+          }
+          p.screenX = sx;
+          p.screenY = sy;
+
+          let size = p.size * zoom;
+          if (index === selectedPlanetIndex) {
+            size *= 1.1;
+          }
+          const imgSize = size * 4; // 이미지 크기 조정 (행성 크기에 비례)
+
+          // 행성 렌더링: 원형 마스크 + cover 크롭 + 자동/수동 오프셋
+          const drawCircleFill = (radius) => {
+            ctx.beginPath();
+            ctx.arc(sx, sy, radius, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.fill();
+          };
+          const drawCover = (img) => {
+            const sw = img.naturalWidth || img.width;
+            const sh = img.naturalHeight || img.height;
+            if (!sw || !sh) return;
+            // 소스 정사각형을 중앙에서 잘라 목표 원에 꽉 차게 그리기
+            const s = Math.min(sw, sh);
+            // 자동+수동 오프셋 적용 (소스 정사각 내부에서 중심 이동)
+            const ox = (p.imgOffsetX || 0) + (p.autoOffsetX || 0); // -0.5~0.5 추천
+            const oy = (p.imgOffsetY || 0) + (p.autoOffsetY || 0);
+            let sx0 = sw/2 - s/2 + ox * s * 0.6; // 0.6: 과도 움직임 방지
+            let sy0 = sh/2 - s/2 + oy * s * 0.6;
+            sx0 = Math.max(0, Math.min(sw - s, sx0));
+            sy0 = Math.max(0, Math.min(sh - s, sy0));
+            ctx.drawImage(
+              img,
+              sx0,
+              sy0,
+              s,
+              s,
+              sx - imgSize/2,
+              sy - imgSize/2,
+              imgSize,
+              imgSize
+            );
+          };
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(sx, sy, imgSize / 2, 0, Math.PI * 2);
+          ctx.closePath();
+          ctx.clip();
+          // 밑색 먼저 채워 이미지 가장자리 빈 공간 보정
+          drawCircleFill(imgSize / 2);
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          if (p.name === 'Saturn') {
+            // 토성: 텍스처 대신 밑색만(고리는 아래에서 별도 렌더)
+          } else if (p.image && p.image.complete && p.image.naturalWidth > 0 && p.image.naturalHeight > 0) {
+            drawCover(p.image);
+          } else if (p.placeholderImage && p.placeholderImage.complete) {
+            drawCover(p.placeholderImage);
+          }
+          ctx.restore();
+
+          // 토성 고리 오버레이(마스크 해제 후 그리기: 잘림 방지)
+          if (p.name === 'Saturn') {
+            ctx.save();
+            ctx.translate(sx, sy);
+            ctx.rotate(globalRotation);
+            ctx.scale(1, orbitMode === '3d' ? tilt : 1);
+            const r = imgSize * 0.46;     // 행성 디스크 근사 반지름
+            const rout = r * 1.65;        // 고리 바깥
+            const rin = r * 0.95;         // 고리 안쪽
+            // evenodd로 도넛 모양 채우기
+            ctx.beginPath();
+            ctx.ellipse(0, 0, rout, rout * 0.42, 0, 0, Math.PI * 2);
+            ctx.ellipse(0, 0, rin, rin * 0.36, 0, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(229, 231, 235, 0.28)';
+            ctx.fill('evenodd');
+            // 결 빛 강조선
+            ctx.beginPath();
+            ctx.ellipse(0, 0, (rout + rin)/2, ((rout + rin)/2) * 0.39, 0, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(229, 231, 235, 0.45)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.restore();
+          }
+          // 선택된 행성의 하이라이트 링
+          if (index === selectedPlanetIndex) {
+            ctx.beginPath();
+            ctx.arc(sx, sy, imgSize / 2 + 2, 0, Math.PI * 2);
+            ctx.strokeStyle = "rgba(248, 250, 252, 0.9)";
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+          }
+          // 행성 이름 표시 (옵션 또는 별자리 모드에서)
+          if (showLabels || orbitMode === "constellation") {
+            ctx.font = "10px system-ui";
+            const labelColor = orbitMode === 'constellation' && p.isRetrograde && skyHighlightRetrograde ? 'rgba(251, 113, 133, 0.95)' : 'rgba(248, 250, 252, 0.85)';
+            ctx.fillStyle = labelColor;
+            const label = index === 2 ? "지구(Earth)" : `${p.displayName}`;
+            ctx.fillText(label, sx + 6, sy - 6);
+          }
+        });
+
+        // 별자리 모드: 천구 원 및 궤적(역행 강조) 그리기
+        if (orbitMode === "constellation") {
+          const radius = baseScale * 1.2 * zoom;
+          // 하늘 원(천구)
+          ctx.beginPath();
+          ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+          ctx.strokeStyle = "rgba(148, 163, 184, 0.35)";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          // 궤적 표시
+          if (skyShowTrails) {
+            planets.forEach((p, idx) => {
+              if (idx === 2 || !p.skyTrail || p.skyTrail.length < 2) return;
+              for (let i = 1; i < p.skyTrail.length; i++) {
+                const a0 = (p.skyTrail[i - 1].a + globalRotation);
+                const a1 = (p.skyTrail[i].a + globalRotation);
+                const x0 = cx + Math.cos(a0) * radius;
+                const y0 = cy + Math.sin(a0) * radius;
+                const x1 = cx + Math.cos(a1) * radius;
+                const y1 = cy + Math.sin(a1) * radius;
+                const retro = skyHighlightRetrograde && p.skyTrail[i].r;
+                ctx.beginPath();
+                ctx.moveTo(x0, y0);
+                ctx.lineTo(x1, y1);
+                ctx.strokeStyle = retro ? 'rgba(251, 113, 133, 0.8)' : 'rgba(148, 163, 184, 0.35)';
+                ctx.lineWidth = retro ? 1.4 : 1;
+                ctx.stroke();
+              }
+            });
+          }
+          // 안내 텍스트
+          ctx.font = "11px system-ui";
+          ctx.fillStyle = "rgba(248, 250, 252, 0.9)";
+          const modeText = skyUseGeocentric ? "지구중심: 역행 발생 가능" : "태양중심: 역행 없음";
+          ctx.fillText(modeText, cx - 70, cy + radius + 14);
+        }
+      }
+
+      // 애니메이션 루프
+      function animate(timestamp) {
+        if (!lastTimestamp) lastTimestamp = timestamp;
+        const dt = (timestamp - lastTimestamp) / 1000;
+        lastTimestamp = timestamp;
+
+        if (!paused) update(dt);
+        draw();
+        requestAnimationFrame(animate);
+      }
+
+      // 행성 클릭 시 확대 및 팝업 표시
+      function focusOnPlanet(p) {
+        // 현재 상태 저장
+        if (!savedState) {
+          savedState = { zoom, panX, panY };
+        }
+        // 확대 비율 설정
+        zoom = Math.min(zoom * 2.5, 3);
+
+        // 행성 위치 계산: 현재 회전 및 기울기 적용
+        const ratio = window.devicePixelRatio || 1;
+        const w = canvas.width / ratio;
+        const h = canvas.height / ratio;
+        const baseScale = Math.min(w, h) / 4.2;
+        const tilt = orbitMode === "3d" ? 0.55 : 1;
+        let xLocal = p.orbitScale * baseScale * Math.cos(p.angle);
+        let yLocal = p.orbitScale * baseScale * Math.sin(p.angle);
+        const cosR = Math.cos(globalRotation);
+        const sinR = Math.sin(globalRotation);
+        let xr = xLocal * cosR - yLocal * sinR;
+        let yr = (xLocal * sinR + yLocal * cosR) * (orbitMode === "3d" ? tilt : 1);
+        let sx, sy;
+        const cx = w / 2 + panX;
+        const cy = h / 2 + panY;
+        if (orbitMode === "constellation") {
+          const radius = baseScale * 1.5 * zoom;
+          if (p.name === "Earth") {
+            sx = cx;
+            sy = cy;
+          } else {
+            sx = cx + Math.cos(p.angle) * radius;
+            sy = cy + Math.sin(p.angle) * radius;
+          }
+        } else {
+          sx = cx + xr * zoom;
+          sy = cy + yr * zoom;
+        }
+        // 중앙으로 이동
+        panX += (w / 2 - sx);
+        panY += (h / 2 - sy);
+      }
+
+      function showPlanetPopup(planet) {
+        popupPlanetName.textContent = `${planet.displayName} (${planet.name})`;
+        popupPlanetText.textContent = planet.description;
+        if (
+          planet.image &&
+          planet.image.complete &&
+          planet.image.naturalWidth > 0 &&
+          planet.image.naturalHeight > 0
+        ) {
+          popupPlanetImg.src = planet.imgSrc;
+        } else {
+          if (!planet.placeholderImage) {
+            const tmp = new Image();
+            tmp.src = generatePlanetPlaceholder(planet, 512);
+            planet.placeholderImage = tmp;
+          }
+          popupPlanetImg.src = planet.placeholderImage.complete
+            ? planet.placeholderImage.src
+            : generatePlanetPlaceholder(planet, 512);
+        }
+        // 이미지 표시 방식: contain + 자동 중심 보정(object-position)
+        try {
+          const ox = ((planet.autoOffsetX || 0) + (planet.imgOffsetX || 0)) * 60; // -30%~+30%
+          const oy = ((planet.autoOffsetY || 0) + (planet.imgOffsetY || 0)) * 60;
+          popupPlanetImg.style.objectFit = 'contain';
+          popupPlanetImg.style.objectPosition = `calc(50% + ${ox}%) calc(50% + ${oy}%)`;
+          popupPlanetImg.alt = `${planet.displayName} (${planet.name}) 이미지`;
+        } catch (_) {}
+        // NASA 링크 동적 생성/업데이트
+        try {
+          const body = popup.querySelector('.popup-body');
+          let link = document.getElementById('popupNasaLink');
+          if (!link && body) {
+            link = document.createElement('a');
+            link.id = 'popupNasaLink';
+            link.target = '_blank';
+            link.rel = 'noopener';
+            link.className = 'primary-btn';
+            link.style.display = 'inline-block';
+            link.style.textDecoration = 'none';
+            link.textContent = 'NASA 페이지에서 더 알아보기 ↗';
+            const pwrap = document.createElement('p');
+            pwrap.style.marginTop = '6px';
+            pwrap.appendChild(link);
+            body.appendChild(pwrap);
+          }
+          if (link) {
+            link.href = planet.nasaUrl || 'https://science.nasa.gov/solar-system/planets/';
+          }
+        } catch (e) { /* ignore */ }
+        popup.classList.add("visible");
+      }
+
+      canvas.addEventListener("click", (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        let clickedIndex = -1;
+        planets.forEach((p, i) => {
+          const dx = x - p.screenX;
+          const dy = y - p.screenY;
+          const hitRadius = (p.size * zoom * 4) / 2;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist <= hitRadius * 1.1) {
+            clickedIndex = i;
+          }
+        });
+        if (clickedIndex >= 0) {
+          selectedPlanetIndex = clickedIndex;
+          planetSelect.value = String(clickedIndex);
+          updatePlanetInfo();
+          const p = planets[clickedIndex];
+          focusOnPlanet(p);
+          showPlanetPopup(p);
+        }
+      });
+
+      // 드래그 및 줌 인터랙션
+      canvas.addEventListener("mousedown", (e) => {
+        isDragging = true;
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+      });
+      window.addEventListener("mouseup", () => {
+        isDragging = false;
+      });
+      window.addEventListener("mousemove", (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - lastMouseX;
+        const dy = e.clientY - lastMouseY;
+        if (e.shiftKey) {
+          zoom *= 1 + dx * 0.002;
+          zoom = Math.max(0.3, Math.min(zoom, 3));
+        } else {
+          globalRotation += dx * 0.003;
+          panY += dy * 0.4;
+        }
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+      });
+      canvas.addEventListener("wheel", (e) => {
+        e.preventDefault();
+        const delta = -e.deltaY;
+        if (delta > 0) {
+          zoom *= 1.1;
+        } else {
+          zoom /= 1.1;
+        }
+        zoom = Math.max(0.3, Math.min(zoom, 3));
+      });
+
+      // 더블클릭으로 보기 초기화
+      canvas.addEventListener("dblclick", () => {
+        resetView();
+      });
+
+      // 키보드 단축키: Space=재생/일시정지, R=보기 초기화, O=궤도 토글, L=라벨 토글
+      window.addEventListener("keydown", (e) => {
+        if (e.code === "Space") {
+          e.preventDefault();
+          paused = !paused;
+          playPauseBtn.textContent = paused ? "▶️ 재생" : "⏸️ 일시정지";
+          playPauseBtn.setAttribute("aria-pressed", paused ? "false" : "true");
+        } else if (e.key && e.key.toLowerCase() === "r") {
+          resetView();
+        } else if (e.key && e.key.toLowerCase() === "o") {
+          showOrbits = !showOrbits;
+          toggleOrbitsBtn.classList.toggle("active", showOrbits);
+          toggleOrbitsBtn.setAttribute("aria-pressed", showOrbits ? "true" : "false");
+          saveSettings();
+        } else if (e.key && e.key.toLowerCase() === "l") {
+          showLabels = !showLabels;
+          toggleLabelsBtn.classList.toggle("active", showLabels);
+          toggleLabelsBtn.setAttribute("aria-pressed", showLabels ? "true" : "false");
+          saveSettings();
+        } else if (e.key && e.key.toLowerCase() === 'g') {
+          // G: 지구중심/태양중심 토글
+          skyUseGeocentric = !skyUseGeocentric;
+          toggleSkyCenterBtn.classList.toggle('active', skyUseGeocentric);
+          toggleSkyCenterBtn.textContent = skyUseGeocentric ? '지구중심' : '태양중심';
+          toggleSkyCenterBtn.setAttribute('aria-pressed', skyUseGeocentric ? 'true' : 'false');
+          saveSettings();
+        } else if (e.key && e.key.toLowerCase() === 't') {
+          // T: 궤적 표시 토글
+          skyShowTrails = !skyShowTrails;
+          toggleSkyTrailsBtn.classList.toggle('active', skyShowTrails);
+          toggleSkyTrailsBtn.setAttribute('aria-pressed', skyShowTrails ? 'true' : 'false');
+          saveSettings();
+        } else if (e.key && e.key.toLowerCase() === 'p') {
+          // P: 역행 강조 토글
+          skyHighlightRetrograde = !skyHighlightRetrograde;
+          toggleRetrogradeBtn.classList.toggle('active', skyHighlightRetrograde);
+          toggleRetrogradeBtn.setAttribute('aria-pressed', skyHighlightRetrograde ? 'true' : 'false');
+          saveSettings();
+        }
+      });
+
+      // 설정 저장/복원
+      function saveSettings() {
+        try {
+          const data = { timeScale, orbitMode, showOrbits, showLabels, skyUseGeocentric, skyShowTrails, skyHighlightRetrograde };
+          localStorage.setItem("solarAppSettings", JSON.stringify(data));
+        } catch (_) {}
+      }
+      function loadSettings() {
+        try {
+          const raw = localStorage.getItem("solarAppSettings");
+          if (!raw) return;
+          const data = JSON.parse(raw);
+          if (typeof data.timeScale === "number") {
+            timeScale = data.timeScale;
+            timeSlider.value = String(timeScale);
+            timeLabel.textContent = `x${timeScale}`;
+          }
+          if (typeof data.skyUseGeocentric === 'boolean') {
+            skyUseGeocentric = data.skyUseGeocentric;
+            toggleSkyCenterBtn.classList.toggle('active', skyUseGeocentric);
+            toggleSkyCenterBtn.textContent = skyUseGeocentric ? '지구중심' : '태양중심';
+            toggleSkyCenterBtn.setAttribute('aria-pressed', skyUseGeocentric ? 'true' : 'false');
+          }
+          if (typeof data.skyShowTrails === 'boolean') {
+            skyShowTrails = data.skyShowTrails;
+            toggleSkyTrailsBtn.classList.toggle('active', skyShowTrails);
+            toggleSkyTrailsBtn.setAttribute('aria-pressed', skyShowTrails ? 'true' : 'false');
+          }
+          if (typeof data.skyHighlightRetrograde === 'boolean') {
+            skyHighlightRetrograde = data.skyHighlightRetrograde;
+            toggleRetrogradeBtn.classList.toggle('active', skyHighlightRetrograde);
+            toggleRetrogradeBtn.setAttribute('aria-pressed', skyHighlightRetrograde ? 'true' : 'false');
+          }
+          if (typeof data.orbitMode === "string") {
+            orbitMode = data.orbitMode;
+            document.querySelectorAll('.orbit-mode-btn[data-mode]').forEach((b) => {
+              const active = b.dataset.mode === orbitMode;
+              b.classList.toggle('active', active);
+              b.setAttribute('aria-pressed', active ? 'true' : 'false');
+            });
+          }
+          if (typeof data.showOrbits === "boolean") {
+            showOrbits = data.showOrbits;
+            toggleOrbitsBtn.classList.toggle("active", showOrbits);
+            toggleOrbitsBtn.setAttribute("aria-pressed", showOrbits ? "true" : "false");
+          }
+          if (typeof data.showLabels === "boolean") {
+            showLabels = data.showLabels;
+            toggleLabelsBtn.classList.toggle("active", showLabels);
+            toggleLabelsBtn.setAttribute("aria-pressed", showLabels ? "true" : "false");
+          }
+        } catch (_) {}
+      }
+
+      // 퀴즈 데이터
+      const quizQuestions = [
+        {
+          type: "mc",
+          question: "태양에서 가장 가까운 행성은 무엇인가요?",
+          options: ["수성", "금성", "지구", "화성"],
+          answer: 0,
+          hint: "공전 주기가 약 88일로 가장 짧아요.",
+        },
+        {
+          type: "mc",
+          question: "지구의 공전 주기는 약 며칠인가요?",
+          options: ["88일", "225일", "365일", "687일"],
+          answer: 2,
+          hint: "1년과 같은 기간입니다.",
+        },
+        {
+          type: "mc",
+          question: "아름다운 고리로 유명한 행성은?",
+          options: ["목성", "토성", "천왕성", "해왕성"],
+          answer: 1,
+          hint: "얼음과 먼지로 이루어진 고리가 있어요.",
+        },
+        {
+          type: "short",
+          question:
+            "토성을 대표하는 특징으로, 얼음과 먼지로 이루어져 행성을 둘러싸고 있는 것은 무엇인가요?",
+          answer: ["고리", "토성의 고리"],
+          hint: "행성을 둘러싼 '링'을 떠올려 보세요.",
+        },
+        {
+          type: "short",
+          question:
+            "우리가 살고 있는 행성의 이름을 한글로 적어 보세요.",
+          answer: ["지구"],
+          hint: "물과 대기가 있는, 생명체가 사는 행성입니다.",
+        },
+      ];
+
+      let quizIndex = 0;
+      let quizScore = 0;
+      let hintUsedThisQuestion = false;
+
+      function updateQuizStatus() {
+        quizStatus.textContent = `점수: ${quizScore}점 | 문제 ${
+          quizIndex + 1
+        } / ${quizQuestions.length}`;
+      }
+
+      function renderQuestion() {
+        const q = quizQuestions[quizIndex];
+        hintUsedThisQuestion = false;
+        nextQuestionBtn.disabled = true;
+        submitAnswerBtn.disabled = false;
+        hintBtn.disabled = false;
+        let html = `<p class="quiz-question">${q.question}</p>`;
+        if (q.type === "mc") {
+          html += '<ul class="quiz-options">';
+          q.options.forEach((opt, idx) => {
+            html += `\n              <li>\n                <label>\n                  <input type="radio" name="quizOption" value="${idx}" />\n                  <span>${opt}</span>\n                </label>\n              </li>`;
+          });
+          html += "</ul>";
+        } else {
+          html += `\n          <input\n            type="text"\n            id="quizShortAnswer"\n            class="quiz-input"\n            placeholder="정답을 입력하세요"\n            autocomplete="off"\n          />`;
+        }
+        html += `<p class="quiz-hint" id="quizHint"></p>`;
+        quizContent.innerHTML = html;
+      }
+
+      function startQuiz() {
+        quizIndex = 0;
+        quizScore = 0;
+        hintUsedThisQuestion = false;
+        quizControls.style.display = "flex";
+        renderQuestion();
+        updateQuizStatus();
+      }
+
+      function endQuiz() {
+        quizControls.style.display = "none";
+        let grade;
+        if (quizScore >= 10) {
+          grade = "S급 태양계 탐험가";
+        } else if (quizScore >= 6) {
+          grade = "A급 태양계 탐험가";
+        } else {
+          grade = "도전 중인 새싹 탐험가";
+        }
+        quizContent.innerHTML = `\n          <p class="quiz-result">\n            퀴즈 종료! 당신의 점수는 <strong>${quizScore}점</strong>입니다.\n          </p>\n          <p class="quiz-grade">\n            획득 등급: <strong>${grade}</strong>\n          </p>\n          <button type="button" id="retryQuizBtn" class="primary-btn">\n            다시 도전하기\n          </button>\n        `;
+        const retryBtn = document.getElementById("retryQuizBtn");
+        retryBtn.addEventListener("click", () => {
+          startQuiz();
+        });
+      }
+
+      quizToggleBtn.addEventListener("click", () => {
+        startQuiz();
+      });
+      hintBtn.addEventListener("click", () => {
+        const q = quizQuestions[quizIndex];
+        const hintElem = document.getElementById("quizHint");
+        if (!hintUsedThisQuestion) {
+          quizScore = Math.max(quizScore - 1, 0);
+          hintUsedThisQuestion = true;
+          hintElem.textContent = `힌트: ${q.hint}`;
+          updateQuizStatus();
+        }
+      });
+      submitAnswerBtn.addEventListener("click", () => {
+        const q = quizQuestions[quizIndex];
+        let correct = false;
+        if (q.type === "mc") {
+          const selected = quizContent.querySelector(
+            'input[name="quizOption"]:checked'
+          );
+          if (!selected) {
+            alert("보기를 하나 선택해 주세요.");
+            return;
+          }
+          const idx = parseInt(selected.value, 10);
+          correct = idx === q.answer;
+        } else {
+          const input = document.getElementById("quizShortAnswer");
+          if (!input || !input.value.trim()) {
+            alert("정답을 입력해 주세요.");
+            return;
+          }
+          const value = input.value.trim();
+          if (Array.isArray(q.answer)) {
+            correct = q.answer.some((ans) => value.includes(ans));
+          } else {
+            correct = value.includes(q.answer);
+          }
+        }
+        if (correct) {
+          quizScore += 2;
+          quizContent.insertAdjacentHTML(
+            "beforeend",
+            '<p class="quiz-feedback correct">정답입니다! 🚀</p>'
+          );
+        } else {
+          quizContent.insertAdjacentHTML(
+            "beforeend",
+            '<p class="quiz-feedback wrong">아惜! 정답이 아닙니다.</p>'
+          );
+        }
+        submitAnswerBtn.disabled = true;
+        nextQuestionBtn.disabled = false;
+        hintBtn.disabled = true;
+        updateQuizStatus();
+        if (quizIndex === quizQuestions.length - 1) {
+          nextQuestionBtn.textContent = "결과 보기";
+        } else {
+          nextQuestionBtn.textContent = "다음 문제";
+        }
+      });
+      nextQuestionBtn.addEventListener("click", () => {
+        if (quizIndex < quizQuestions.length - 1) {
+          quizIndex++;
+          renderQuestion();
+          updateQuizStatus();
+        } else {
+          endQuiz();
+        }
+      });
+
+      requestAnimationFrame(animate);
+    });
+  </script>
+</body>
+</html>
